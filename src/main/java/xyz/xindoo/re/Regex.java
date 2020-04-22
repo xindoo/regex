@@ -1,6 +1,8 @@
 package xyz.xindoo.re;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class Regex {
     private Graph nfaGraph;
@@ -34,7 +36,7 @@ public class Regex {
                     }
                     break;
                 }
-                case '|' : {  // 对or的支持目前有些优先级问题
+                case '|' : {
                     String remainRegex = reader.getRemainRegex(reader);
                     Graph newGraph = regex2nfa(remainRegex);
                     if (graph == null) {
@@ -53,6 +55,45 @@ public class Regex {
                 }
                 // 处理特殊占位符
                 case '\\' : {
+                    char nextCh = reader.next();
+                    switch (nextCh) {
+                        case 'd': {
+                            break;
+                        }
+                        case 'D': {
+                            break;
+                        }
+                        case 's': {
+                            break;
+                        }
+                        case 'S': {
+                            break;
+                        }
+                        case '\\' :
+                        case '.' :
+                        case '?' :
+                        case '+' :
+                        case '*' :
+                        case '{' :
+                        case '}' :
+                        case '[' :
+                        case ']' :
+                        case '(' :
+                        case ')' : {
+                            State start = new State();
+                            State end = new State();
+                            start.addNext(String.valueOf(nextCh), end);
+                            Graph newGraph = new Graph(start, end);
+                            if (graph == null) {
+                                graph = newGraph;
+                            } else {
+                                graph.addSeriesGraph(newGraph);
+                            }
+                        }
+                        default:{
+                            System.out.println("error");
+                        }
+                    }
                     break;
                 }
                 default : {  // 处理普通字符
@@ -128,5 +169,9 @@ public class Regex {
             }
         }
         return false;
+    }
+
+    public List<String> match(String text) {
+        return new ArrayList<>();
     }
 }

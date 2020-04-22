@@ -11,13 +11,6 @@ public class Graph {
         this.end = end;
     }
 
-//    public static Graph getEmptyGraph() {
-//        Node start = new Node();
-//        Node end = new Node();
-//        start.addNext(EPSILON, end);
-//        return new Graph(start, end);
-//    }
-
     // |
     public void addParallelGraph(Graph graph) {
         State newStart = new State();

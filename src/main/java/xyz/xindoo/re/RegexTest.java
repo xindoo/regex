@@ -3,8 +3,7 @@ package xyz.xindoo.re;
 
 public class RegexTest {
     public static void main(String[] args) throws Exception {
-//        Regex regex = Regex.compile("a(bc)*");
-        Regex regex = Regex.compile("a((abc)|(def))d");
+        Regex regex = Regex.compile("a(abc|def)d");
         System.out.println(regex.isMatch("axd"));
         System.out.println(regex.isMatch("abcccd"));
         System.out.println(regex.isMatch("ad"));
