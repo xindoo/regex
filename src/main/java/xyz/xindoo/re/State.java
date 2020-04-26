@@ -1,5 +1,7 @@
 package xyz.xindoo.re;
 
+import xyz.xindoo.re.strategy.MatchStrategy;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,9 +16,9 @@ public class State {
         this.id = idCnt++;
     }
 
-    Map<String, List<State>> next = new HashMap<>();
+    Map<MatchStrategy, List<State>> next = new HashMap<>();
 
-    public void addNext(String path, State state) {
+    public void addNext(MatchStrategy path, State state) {
         List<State> list = next.get(path);
         if (list == null) {
             list = new ArrayList<>();

@@ -1,5 +1,8 @@
 package xyz.xindoo.re;
 
+import xyz.xindoo.re.strategy.EpsilonMatchStrategy;
+import xyz.xindoo.re.strategy.MatchStrategy;
+
 public class Graph {
     public static String EPSILON = "epsilon";
     public static String DOT = ".";
@@ -15,17 +18,19 @@ public class Graph {
     public void addParallelGraph(Graph graph) {
         State newStart = new State();
         State newEnd = new State();
-        newStart.addNext(EPSILON, this.start);
-        newStart.addNext(EPSILON, graph.start);
-        this.end.addNext(EPSILON, newEnd);
-        graph.end.addNext(EPSILON, newEnd);
+        MatchStrategy path = new EpsilonMatchStrategy();
+        newStart.addNext(path, this.start);
+        newStart.addNext(path, graph.start);
+        this.end.addNext(path, newEnd);
+        graph.end.addNext(path, newEnd);
         this.start = newStart;
         this.end = newEnd;
     }
 
     //
     public void addSeriesGraph(Graph graph) {
-        this.end.addNext(EPSILON, graph.start);
+        MatchStrategy path = new EpsilonMatchStrategy();
+        this.end.addNext(path, graph.start);
         this.end = graph.end;
     }
 
@@ -37,16 +42,18 @@ public class Graph {
 
     // ? 重复0次哦
     public void addSToE() {
-        start.addNext(EPSILON, end);
+        MatchStrategy path = new EpsilonMatchStrategy();
+        start.addNext(path, end);
     }
 
     // + 重复1-n次
     public void repeatPlus() {
         State newStart = new State();
         State newEnd = new State();
-        newStart.addNext(EPSILON, this.start);
-        end.addNext(EPSILON, newEnd);
-        end.addNext(EPSILON, start);
+        MatchStrategy path = new EpsilonMatchStrategy();
+        newStart.addNext(path, this.start);
+        end.addNext(path, newEnd);
+        end.addNext(path, start);
         this.start = newStart;
         this.end = newEnd;
     }
