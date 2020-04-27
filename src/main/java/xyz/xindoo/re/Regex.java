@@ -6,6 +6,7 @@ import xyz.xindoo.re.strategy.DotMatchStrategy;
 import xyz.xindoo.re.strategy.EpsilonMatchStrategy;
 import xyz.xindoo.re.strategy.MatchStrategy;
 import xyz.xindoo.re.strategy.SpaceMatchStrategy;
+import xyz.xindoo.re.strategy.WMatchStrategy;
 
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,9 @@ public class Regex {
         Graph graph = null;
         while (reader.hasNext()) {
             char ch = reader.next();
+            MatchStrategy matchStrategy = null;
             switch (ch) {
+                // 子表达式特殊处理
                 case '(' : {
                     String subRegex = reader.getSubRegex(reader);
                     Graph newGraph = regex2nfa(subRegex);
@@ -42,6 +45,7 @@ public class Regex {
                     }
                     break;
                 }
+                // 或表达式特殊处理
                 case '|' : {
                     String remainRegex = reader.getRemainRegex(reader);
                     Graph newGraph = regex2nfa(remainRegex);
@@ -53,16 +57,18 @@ public class Regex {
                     break;
                 }
                 case '^' : {
-                    Graph newGraph = null;
                     break;
                 }
                 case '$' : {
                     break;
                 }
+                case '.' : {
+                    matchStrategy = new DotMatchStrategy();
+                    break;
+                }
                 // 处理特殊占位符
                 case '\\' : {
                     char nextCh = reader.next();
-                    MatchStrategy matchStrategy = null;
                     switch (nextCh) {
                         case 'd': {
                             matchStrategy = new DigitalMatchStrategy(false);
@@ -70,6 +76,14 @@ public class Regex {
                         }
                         case 'D': {
                             matchStrategy = new DigitalMatchStrategy(true);
+                            break;
+                        }
+                        case 'w': {
+                            matchStrategy = new WMatchStrategy(false);
+                            break;
+                        }
+                        case 'W': {
+                            matchStrategy = new WMatchStrategy(true);
                             break;
                         }
                         case 's': {
@@ -80,6 +94,7 @@ public class Regex {
                             matchStrategy = new SpaceMatchStrategy(true);
                             break;
                         }
+                        // 以下是特殊符号
                         case '\\' :
                         case '.' :
                         case '?' :
@@ -92,46 +107,31 @@ public class Regex {
                         case '(' :
                         case ')' : {
                             matchStrategy = new CharMatchStrategy(nextCh);
+                            break;
                         }
                         default:{
                             System.out.println("error");
                         }
                     }
-                    State start = new State();
-                    State end = new State();
-                    start.addNext(matchStrategy, end);
-                    Graph newGraph = new Graph(start, end);
-                    checkRepeat(reader, newGraph);
-                    if (graph == null) {
-                        graph = newGraph;
-                    } else {
-                        graph.addSeriesGraph(newGraph);
-                    }
                     break;
                 }
-                case '.' : {
-                    State start = new State();
-                    State end = new State();
-                    start.addNext(new DotMatchStrategy(), end);
-                    Graph newGraph = new Graph(start, end);
-                    checkRepeat(reader, newGraph);
-                    if (graph == null) {
-                        graph = newGraph;
-                    } else {
-                        graph.addSeriesGraph(newGraph);
-                    }
-                }
+
                 default : {  // 处理普通字符
-                    State start = new State();
-                    State end = new State();
-                    start.addNext(new CharMatchStrategy(ch), end);
-                    Graph newGraph = new Graph(start, end);
-                    checkRepeat(reader, newGraph);
-                    if (graph == null) {
-                        graph = newGraph;
-                    } else {
-                        graph.addSeriesGraph(newGraph);
-                    }
+                    matchStrategy = new CharMatchStrategy(ch);
+                }
+            }
+
+            // 表明有某类字符的匹配
+            if (matchStrategy != null) {
+                State start = new State();
+                State end = new State();
+                start.addNext(matchStrategy, end);
+                Graph newGraph = new Graph(start, end);
+                checkRepeat(reader, newGraph);
+                if (graph == null) {
+                    graph = newGraph;
+                } else {
+                    graph.addSeriesGraph(newGraph);
                 }
             }
         }
