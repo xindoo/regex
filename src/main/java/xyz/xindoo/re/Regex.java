@@ -1,6 +1,7 @@
 package xyz.xindoo.re;
 
 import xyz.xindoo.re.strategy.CharMatchStrategy;
+import xyz.xindoo.re.strategy.CharSetMatchStrategy;
 import xyz.xindoo.re.strategy.DigitalMatchStrategy;
 import xyz.xindoo.re.strategy.DotMatchStrategy;
 import xyz.xindoo.re.strategy.EpsilonMatchStrategy;
@@ -56,6 +57,10 @@ public class Regex {
                     }
                     break;
                 }
+                case '[' : {
+                    matchStrategy = getCharSetMatch(reader);
+                    break;
+                }
                 case '^' : {
                     break;
                 }
@@ -94,23 +99,10 @@ public class Regex {
                             matchStrategy = new SpaceMatchStrategy(true);
                             break;
                         }
-                        // 以下是特殊符号
-                        case '\\' :
-                        case '.' :
-                        case '?' :
-                        case '+' :
-                        case '*' :
-                        case '{' :
-                        case '}' :
-                        case '[' :
-                        case ']' :
-                        case '(' :
-                        case ')' : {
+                        // 转义后的字符匹配
+                        default:{
                             matchStrategy = new CharMatchStrategy(nextCh);
                             break;
-                        }
-                        default:{
-                            System.out.println("error");
                         }
                     }
                     break;
@@ -118,10 +110,11 @@ public class Regex {
 
                 default : {  // 处理普通字符
                     matchStrategy = new CharMatchStrategy(ch);
+                    break;
                 }
             }
 
-            // 表明有某类字符的匹配
+            // 表明有某类单字符的匹配
             if (matchStrategy != null) {
                 State start = new State();
                 State end = new State();
@@ -183,10 +176,10 @@ public class Regex {
                     }
                 }
             } else {
-                // 遍历匹配策略
                 if (!matchStrategy.isMatch(text.charAt(pos))) {
                     continue;
                 }
+                // 遍历匹配策略
                 for (State nextState : entry.getValue()) {
                     if (isMatch(text, pos + 1, nextState)) {
                         return true;
@@ -242,4 +235,20 @@ public class Regex {
 //        }
 //        return res;
 //    }
+    /**
+     * 暂时只支持字母 数字
+     * */
+    static CharSetMatchStrategy getCharSetMatch(Reader reader) {
+        String charSet = "";
+        boolean isReverse = false;
+        char ch;
+        while ((ch = reader.next()) != ']') {
+            if (ch == '^') {
+                isReverse = true;
+                continue;
+            }
+            charSet += ch;
+        }
+        return new CharSetMatchStrategy(charSet, isReverse);
+    }
 }
