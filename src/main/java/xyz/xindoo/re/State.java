@@ -1,6 +1,6 @@
 package xyz.xindoo.re;
 
-import xyz.xindoo.re.strategy.MatchStrategy;
+import xyz.xindoo.re.nfa.strategy.MatchStrategy;
 
 import java.util.ArrayList;
 import java.util.HashMap;

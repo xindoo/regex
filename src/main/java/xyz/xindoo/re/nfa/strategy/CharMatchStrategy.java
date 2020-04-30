@@ -1,6 +1,6 @@
-package xyz.xindoo.re.strategy;
+package xyz.xindoo.re.nfa.strategy;
 
-public class CharMatchStrategy implements MatchStrategy{
+public class CharMatchStrategy extends MatchStrategy{
     private char cur;
     public CharMatchStrategy(char c) {
         this.cur = c;

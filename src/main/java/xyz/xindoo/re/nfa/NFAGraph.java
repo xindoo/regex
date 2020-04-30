@@ -1,37 +1,38 @@
-package xyz.xindoo.re;
+package xyz.xindoo.re.nfa;
 
-import xyz.xindoo.re.strategy.EpsilonMatchStrategy;
-import xyz.xindoo.re.strategy.MatchStrategy;
+import xyz.xindoo.re.State;
+import xyz.xindoo.re.nfa.strategy.EpsilonMatchStrategy;
+import xyz.xindoo.re.nfa.strategy.MatchStrategy;
 
-public class Graph {
+public class NFAGraph {
     public static String EPSILON = "epsilon";
     public static String DOT = ".";
 
     public State start;
     public State end;
-    public Graph(State start, State end) {
+    public NFAGraph(State start, State end) {
         this.start = start;
         this.end = end;
     }
 
     // |
-    public void addParallelGraph(Graph graph) {
+    public void addParallelGraph(NFAGraph NFAGraph) {
         State newStart = new State();
         State newEnd = new State();
         MatchStrategy path = new EpsilonMatchStrategy();
         newStart.addNext(path, this.start);
-        newStart.addNext(path, graph.start);
+        newStart.addNext(path, NFAGraph.start);
         this.end.addNext(path, newEnd);
-        graph.end.addNext(path, newEnd);
+        NFAGraph.end.addNext(path, newEnd);
         this.start = newStart;
         this.end = newEnd;
     }
 
     //
-    public void addSeriesGraph(Graph graph) {
+    public void addSeriesGraph(NFAGraph NFAGraph) {
         MatchStrategy path = new EpsilonMatchStrategy();
-        this.end.addNext(path, graph.start);
-        this.end = graph.end;
+        this.end.addNext(path, NFAGraph.start);
+        this.end = NFAGraph.end;
     }
 
     // * 重复0-n次

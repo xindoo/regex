@@ -1,35 +1,36 @@
 package xyz.xindoo.re;
 
-import xyz.xindoo.re.strategy.CharMatchStrategy;
-import xyz.xindoo.re.strategy.CharSetMatchStrategy;
-import xyz.xindoo.re.strategy.DigitalMatchStrategy;
-import xyz.xindoo.re.strategy.DotMatchStrategy;
-import xyz.xindoo.re.strategy.EpsilonMatchStrategy;
-import xyz.xindoo.re.strategy.MatchStrategy;
-import xyz.xindoo.re.strategy.SpaceMatchStrategy;
-import xyz.xindoo.re.strategy.WMatchStrategy;
+import xyz.xindoo.re.nfa.strategy.CharMatchStrategy;
+import xyz.xindoo.re.nfa.strategy.CharSetMatchStrategy;
+import xyz.xindoo.re.nfa.strategy.DigitalMatchStrategy;
+import xyz.xindoo.re.nfa.strategy.DotMatchStrategy;
+import xyz.xindoo.re.nfa.strategy.EpsilonMatchStrategy;
+import xyz.xindoo.re.nfa.NFAGraph;
+import xyz.xindoo.re.nfa.strategy.MatchStrategy;
+import xyz.xindoo.re.nfa.strategy.SpaceMatchStrategy;
+import xyz.xindoo.re.nfa.strategy.WMatchStrategy;
 
 import java.util.List;
 import java.util.Map;
 
 public class Regex {
-    private Graph nfaGraph;
+    private NFAGraph nfaGraph;
     public static Regex compile(String regex) throws Exception {
         if (regex == null || regex.length() == 0) {
             throw new Exception("regex cannot be empty!");
         }
-        Graph graph = regex2nfa(regex);
-        graph.end.setStateType();
-        return new Regex(graph);
+        NFAGraph NFAGraph = regex2nfa(regex);
+        NFAGraph.end.setStateType();
+        return new Regex(NFAGraph);
     }
 
-    private Regex(Graph graph) {
-        this.nfaGraph = graph;
+    private Regex(NFAGraph NFAGraph) {
+        this.nfaGraph = NFAGraph;
     }
 
-    private static Graph regex2nfa(String regex) {
+    private static NFAGraph regex2nfa(String regex) {
         Reader reader = new Reader(regex);
-        Graph graph = null;
+        NFAGraph NFAGraph = null;
         while (reader.hasNext()) {
             char ch = reader.next();
             MatchStrategy matchStrategy = null;
@@ -37,23 +38,23 @@ public class Regex {
                 // 子表达式特殊处理
                 case '(' : {
                     String subRegex = reader.getSubRegex(reader);
-                    Graph newGraph = regex2nfa(subRegex);
-                    checkRepeat(reader, newGraph);
-                    if (graph == null) {
-                        graph = newGraph;
+                    NFAGraph newNFAGraph = regex2nfa(subRegex);
+                    checkRepeat(reader, newNFAGraph);
+                    if (NFAGraph == null) {
+                        NFAGraph = newNFAGraph;
                     } else {
-                        graph.addSeriesGraph(newGraph);
+                        NFAGraph.addSeriesGraph(newNFAGraph);
                     }
                     break;
                 }
                 // 或表达式特殊处理
                 case '|' : {
                     String remainRegex = reader.getRemainRegex(reader);
-                    Graph newGraph = regex2nfa(remainRegex);
-                    if (graph == null) {
-                        graph = newGraph;
+                    NFAGraph newNFAGraph = regex2nfa(remainRegex);
+                    if (NFAGraph == null) {
+                        NFAGraph = newNFAGraph;
                     } else {
-                        graph.addParallelGraph(newGraph);
+                        NFAGraph.addParallelGraph(newNFAGraph);
                     }
                     break;
                 }
@@ -119,31 +120,31 @@ public class Regex {
                 State start = new State();
                 State end = new State();
                 start.addNext(matchStrategy, end);
-                Graph newGraph = new Graph(start, end);
-                checkRepeat(reader, newGraph);
-                if (graph == null) {
-                    graph = newGraph;
+                NFAGraph newNFAGraph = new NFAGraph(start, end);
+                checkRepeat(reader, newNFAGraph);
+                if (NFAGraph == null) {
+                    NFAGraph = newNFAGraph;
                 } else {
-                    graph.addSeriesGraph(newGraph);
+                    NFAGraph.addSeriesGraph(newNFAGraph);
                 }
             }
         }
-        return graph;
+        return NFAGraph;
     }
 
-    private static void checkRepeat(Reader reader, Graph newGraph) {
+    private static void checkRepeat(Reader reader, NFAGraph newNFAGraph) {
         char nextCh = reader.peak();
         switch (nextCh) {
             case '*': {
-                newGraph.repeatStar();
+                newNFAGraph.repeatStar();
                 reader.next();
                 break;
             } case '+': {
-                newGraph.repeatPlus();
+                newNFAGraph.repeatPlus();
                 reader.next();
                 break;
             } case '?' : {
-                newGraph.addSToE();
+                newNFAGraph.addSToE();
                 reader.next();
                 break;
             } case '{' : {

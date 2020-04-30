@@ -1,15 +1,15 @@
-package xyz.xindoo.re.strategy;
+package xyz.xindoo.re.nfa.strategy;
 
-public class DigitalMatchStrategy implements MatchStrategy{
+public class SpaceMatchStrategy extends MatchStrategy{
     private boolean isReverse;
 
-    public DigitalMatchStrategy(boolean isReverse) {
+    public SpaceMatchStrategy(boolean isReverse) {
         this.isReverse = isReverse;
     }
 
     @Override
     public boolean isMatch(char c) {
-        boolean res = c >= '0' && c <= '9';
+        boolean res = c == '\f' || c == '\n' || c == '\r' || c == '\t';
         if (isReverse) {
             return !res;
         }

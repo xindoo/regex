@@ -1,16 +1,13 @@
-package xyz.xindoo.re.strategy;
+package xyz.xindoo.re.nfa.strategy;
 
-public class CharSetMatchStrategy implements MatchStrategy{
+public class CharSetMatchStrategy extends MatchStrategy{
 
-    private boolean isReverse = false;
     private String charSet = "";
     public CharSetMatchStrategy(String charSet, boolean isReverse) {
         this.charSet = charSet;
         this.isReverse = isReverse;
     }
-    public void setReverse(boolean reverse) {
-        isReverse = reverse;
-    }
+
 
     @Override
     public boolean isMatch(char c) {
