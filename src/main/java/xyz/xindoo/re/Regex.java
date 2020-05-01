@@ -191,51 +191,6 @@ public class Regex {
         return false;
     }
 
-//    private int getMatchEnd(String text, int pos, State curState) {
-//        if (curState.isEndState()) {
-//            return pos;
-//        }
-//
-//        for (State nextState : curState.next.getOrDefault(Graph.EPSILON, Collections.emptyList())) {
-//            int end = getMatchEnd(text, pos, nextState);
-//            if (end != -1) {
-//                return end;
-//            }
-//        }
-//
-//        for (State nextState : curState.next.getOrDefault(Graph.DOT, Collections.emptyList())) {
-//            int end = getMatchEnd(text, pos + 1, nextState);
-//            if (end != -1) {
-//                return end;
-//            }
-//        }
-//
-//        // 字符串遍历完了,但仍旧没有到终止态
-//        if (pos == text.length()) {
-//            return -1;
-//        }
-//
-//        String path = String.valueOf(text.charAt(pos));
-//        for (State nextState : curState.next.getOrDefault(path, Collections.emptyList())) {
-//            int end = getMatchEnd(text, pos + 1, nextState);
-//            if (end != -1) {
-//                return end;
-//            }
-//        }
-//        return -1;
-//    }
-//
-//    public List<String> match(String text) {
-//        List<String> res = new ArrayList<>();
-//        for (int i = 0; i < text.length(); i++) {
-//            int end = getMatchEnd(text, i, nfaGraph.start);
-//            if (end != -1) {
-//                res.add(text.substring(i, end));
-//                i = end - 1;
-//            }
-//        }
-//        return res;
-//    }
     /**
      * 暂时只支持字母 数字
      * */
