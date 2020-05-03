@@ -5,9 +5,6 @@ import xyz.xindoo.re.nfa.strategy.EpsilonMatchStrategy;
 import xyz.xindoo.re.nfa.strategy.MatchStrategy;
 
 public class NFAGraph {
-    public static String EPSILON = "epsilon";
-    public static String DOT = ".";
-
     public State start;
     public State end;
     public NFAGraph(State start, State end) {

@@ -1,7 +1,8 @@
 # regex
 
 
-最近学习编译原理，基于NFA实现了正则表达式，代码刚写完，后续具体实现会出一篇博客放在 [https://xindoo.blog.csdn.net/](https://xindoo.blog.csdn.net/)，敬请关注。
+最近学习编译原理，基于NFA实现了正则表达式，代码刚写完，具体内容参考博客[https://blog.csdn.net/xindoo/article/details/105875239](https://blog.csdn.net/xindoo/article
+/details/105875239)，欢迎查阅。
 
 目前还是demo，算是刚把引擎的骨架搭建起来，后续继续完善代码。  
 
