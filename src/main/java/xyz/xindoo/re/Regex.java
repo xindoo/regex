@@ -1,14 +1,9 @@
 package xyz.xindoo.re;
 
-import xyz.xindoo.re.nfa.strategy.CharMatchStrategy;
-import xyz.xindoo.re.nfa.strategy.CharSetMatchStrategy;
-import xyz.xindoo.re.nfa.strategy.DigitalMatchStrategy;
-import xyz.xindoo.re.nfa.strategy.DotMatchStrategy;
 import xyz.xindoo.re.nfa.strategy.EpsilonMatchStrategy;
 import xyz.xindoo.re.nfa.NFAGraph;
 import xyz.xindoo.re.nfa.strategy.MatchStrategy;
-import xyz.xindoo.re.nfa.strategy.SpaceMatchStrategy;
-import xyz.xindoo.re.nfa.strategy.WMatchStrategy;
+import xyz.xindoo.re.nfa.strategy.MatchStrategyManager;
 
 import java.util.List;
 import java.util.Map;
@@ -33,7 +28,7 @@ public class Regex {
         NFAGraph NFAGraph = null;
         while (reader.hasNext()) {
             char ch = reader.next();
-            MatchStrategy matchStrategy = null;
+            String edge = null;
             switch (ch) {
                 // 子表达式特殊处理
                 case '(' : {
@@ -59,7 +54,7 @@ public class Regex {
                     break;
                 }
                 case '[' : {
-                    matchStrategy = getCharSetMatch(reader);
+                    edge = getCharSetMatch(reader);
                     break;
                 }
                 case '^' : {
@@ -69,7 +64,7 @@ public class Regex {
                     break;
                 }
                 case '.' : {
-                    matchStrategy = new DotMatchStrategy();
+                    edge = ".";
                     break;
                 }
                 // 处理特殊占位符
@@ -77,32 +72,32 @@ public class Regex {
                     char nextCh = reader.next();
                     switch (nextCh) {
                         case 'd': {
-                            matchStrategy = new DigitalMatchStrategy(false);
+                            edge = "\\d";
                             break;
                         }
                         case 'D': {
-                            matchStrategy = new DigitalMatchStrategy(true);
+                            edge = "\\D";
                             break;
                         }
                         case 'w': {
-                            matchStrategy = new WMatchStrategy(false);
+                            edge = "\\w";
                             break;
                         }
                         case 'W': {
-                            matchStrategy = new WMatchStrategy(true);
+                            edge = "\\W";
                             break;
                         }
                         case 's': {
-                            matchStrategy = new SpaceMatchStrategy(false);
+                            edge = "\\s";
                             break;
                         }
                         case 'S': {
-                            matchStrategy = new SpaceMatchStrategy(true);
+                            edge = "\\S";
                             break;
                         }
                         // 转义后的字符匹配
                         default:{
-                            matchStrategy = new CharMatchStrategy(nextCh);
+                            edge = String.valueOf(nextCh);
                             break;
                         }
                     }
@@ -110,23 +105,20 @@ public class Regex {
                 }
 
                 default : {  // 处理普通字符
-                    matchStrategy = new CharMatchStrategy(ch);
+                    edge = String.valueOf(ch);
                     break;
                 }
             }
 
-            // 表明有某类单字符的匹配
-            if (matchStrategy != null) {
-                State start = new State();
-                State end = new State();
-                start.addNext(matchStrategy, end);
-                NFAGraph newNFAGraph = new NFAGraph(start, end);
-                checkRepeat(reader, newNFAGraph);
-                if (NFAGraph == null) {
-                    NFAGraph = newNFAGraph;
-                } else {
-                    NFAGraph.addSeriesGraph(newNFAGraph);
-                }
+            State start = new State();
+            State end = new State();
+            start.addNext(edge, end);
+            NFAGraph newNFAGraph = new NFAGraph(start, end);
+            checkRepeat(reader, newNFAGraph);
+            if (NFAGraph == null) {
+                NFAGraph = newNFAGraph;
+            } else {
+                NFAGraph.addSeriesGraph(newNFAGraph);
             }
         }
         return NFAGraph;
@@ -168,8 +160,9 @@ public class Regex {
             return false;
         }
 
-        for (Map.Entry<MatchStrategy, List<State>> entry : curState.next.entrySet()) {
-            MatchStrategy matchStrategy = entry.getKey();
+        for (Map.Entry<String, List<State>> entry : curState.next.entrySet()) {
+            String edge = entry.getKey();
+            MatchStrategy matchStrategy = MatchStrategyManager.getStrategy(edge);
             if (matchStrategy instanceof EpsilonMatchStrategy) {
                 for (State nextState : entry.getValue()) {
                     if (isMatch(text, pos, nextState)) {
@@ -177,7 +170,7 @@ public class Regex {
                     }
                 }
             } else {
-                if (!matchStrategy.isMatch(text.charAt(pos))) {
+                if (!matchStrategy.isMatch(text.charAt(pos), edge)) {
                     continue;
                 }
                 // 遍历匹配策略
@@ -194,17 +187,12 @@ public class Regex {
     /**
      * 暂时只支持字母 数字
      * */
-    static CharSetMatchStrategy getCharSetMatch(Reader reader) {
+    static String getCharSetMatch(Reader reader) {
         String charSet = "";
-        boolean isReverse = false;
         char ch;
         while ((ch = reader.next()) != ']') {
-            if (ch == '^') {
-                isReverse = true;
-                continue;
-            }
             charSet += ch;
         }
-        return new CharSetMatchStrategy(charSet, isReverse);
+        return charSet;
     }
 }

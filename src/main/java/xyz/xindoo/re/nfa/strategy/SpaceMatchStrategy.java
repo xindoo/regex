@@ -8,8 +8,8 @@ public class SpaceMatchStrategy extends MatchStrategy{
     }
 
     @Override
-    public boolean isMatch(char c) {
-        boolean res = c == '\f' || c == '\n' || c == '\r' || c == '\t';
+    public boolean isMatch(char c, String edge) {
+        boolean res = (c == '\f' || c == '\n' || c == '\r' || c == '\t' || c == ' ');
         if (isReverse) {
             return !res;
         }

@@ -8,7 +8,7 @@ public class DigitalMatchStrategy extends MatchStrategy{
     }
 
     @Override
-    public boolean isMatch(char c) {
+    public boolean isMatch(char c, String edge) {
         boolean res = c >= '0' && c <= '9';
         if (isReverse) {
             return !res;

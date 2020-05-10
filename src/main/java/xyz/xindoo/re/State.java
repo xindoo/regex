@@ -16,13 +16,13 @@ public class State {
         this.id = idCnt++;
     }
 
-    Map<MatchStrategy, List<State>> next = new HashMap<>();
+    Map<String, List<State>> next = new HashMap<>();
 
-    public void addNext(MatchStrategy path, State state) {
-        List<State> list = next.get(path);
+    public void addNext(String edge, State state) {
+        List<State> list = next.get(edge);
         if (list == null) {
             list = new ArrayList<>();
-            next.put(path, list);
+            next.put(edge, list);
         }
         list.add(state);
     }

@@ -2,17 +2,7 @@ package xyz.xindoo.re.nfa.strategy;
 
 public class MatchStrategy {
     protected boolean isReverse = false;
-    protected String metaData = "";
-
-    public void setReverse(boolean reverse) {
-        isReverse = reverse;
-    }
-
-    public boolean isMatch(char c){
+    public boolean isMatch(char c, String edge){
         return false;
-    }
-
-    public boolean equals(MatchStrategy other) {
-        return this.metaData.equals(other.metaData);
     }
 }

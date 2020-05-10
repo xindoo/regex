@@ -1,8 +1,7 @@
 package xyz.xindoo.re.nfa;
 
+import xyz.xindoo.re.Constant;
 import xyz.xindoo.re.State;
-import xyz.xindoo.re.nfa.strategy.EpsilonMatchStrategy;
-import xyz.xindoo.re.nfa.strategy.MatchStrategy;
 
 public class NFAGraph {
     public State start;
@@ -16,19 +15,17 @@ public class NFAGraph {
     public void addParallelGraph(NFAGraph NFAGraph) {
         State newStart = new State();
         State newEnd = new State();
-        MatchStrategy path = new EpsilonMatchStrategy();
-        newStart.addNext(path, this.start);
-        newStart.addNext(path, NFAGraph.start);
-        this.end.addNext(path, newEnd);
-        NFAGraph.end.addNext(path, newEnd);
+        newStart.addNext(Constant.EPSILON, this.start);
+        newStart.addNext(Constant.EPSILON, NFAGraph.start);
+        this.end.addNext(Constant.EPSILON, newEnd);
+        NFAGraph.end.addNext(Constant.EPSILON, newEnd);
         this.start = newStart;
         this.end = newEnd;
     }
 
     //
     public void addSeriesGraph(NFAGraph NFAGraph) {
-        MatchStrategy path = new EpsilonMatchStrategy();
-        this.end.addNext(path, NFAGraph.start);
+        this.end.addNext(Constant.EPSILON, NFAGraph.start);
         this.end = NFAGraph.end;
     }
 
@@ -40,18 +37,16 @@ public class NFAGraph {
 
     // ? 重复0次哦
     public void addSToE() {
-        MatchStrategy path = new EpsilonMatchStrategy();
-        start.addNext(path, end);
+        start.addNext(Constant.EPSILON, end);
     }
 
     // + 重复1-n次
     public void repeatPlus() {
         State newStart = new State();
         State newEnd = new State();
-        MatchStrategy path = new EpsilonMatchStrategy();
-        newStart.addNext(path, this.start);
-        end.addNext(path, newEnd);
-        end.addNext(path, start);
+        newStart.addNext(Constant.EPSILON, this.start);
+        end.addNext(Constant.EPSILON, newEnd);
+        end.addNext(Constant.EPSILON, start);
         this.start = newStart;
         this.end = newEnd;
     }

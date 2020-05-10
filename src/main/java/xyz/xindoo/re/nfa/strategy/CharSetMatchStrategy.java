@@ -1,18 +1,13 @@
 package xyz.xindoo.re.nfa.strategy;
 
 public class CharSetMatchStrategy extends MatchStrategy{
-
-    private String charSet = "";
-    public CharSetMatchStrategy(String charSet, boolean isReverse) {
-        this.charSet = charSet;
-        this.isReverse = isReverse;
-    }
-
-
     @Override
-    public boolean isMatch(char c) {
+    public boolean isMatch(char c, String charSet) {
         boolean res = false;
         for (int i = 0; i < charSet.length(); i++) {
+            if (charSet.charAt(0) == '^') {
+                continue;
+            }
             if ('-' == charSet.charAt(i)) {
                 return c >= charSet.charAt(i-1) && c <= charSet.charAt(i+1);
             }
@@ -21,7 +16,7 @@ public class CharSetMatchStrategy extends MatchStrategy{
                 break;
             }
         }
-        if (isReverse)  {
+        if (charSet.charAt(0) == '^')  {
             return !res;
         }
         return res;
