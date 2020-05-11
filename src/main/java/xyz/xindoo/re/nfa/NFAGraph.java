@@ -1,20 +1,20 @@
 package xyz.xindoo.re.nfa;
 
 import xyz.xindoo.re.Constant;
-import xyz.xindoo.re.State;
+import xyz.xindoo.re.NFAState;
 
 public class NFAGraph {
-    public State start;
-    public State end;
-    public NFAGraph(State start, State end) {
+    public NFAState start;
+    public NFAState end;
+    public NFAGraph(NFAState start, NFAState end) {
         this.start = start;
         this.end = end;
     }
 
     // |
     public void addParallelGraph(NFAGraph NFAGraph) {
-        State newStart = new State();
-        State newEnd = new State();
+        NFAState newStart = new NFAState();
+        NFAState newEnd = new NFAState();
         newStart.addNext(Constant.EPSILON, this.start);
         newStart.addNext(Constant.EPSILON, NFAGraph.start);
         this.end.addNext(Constant.EPSILON, newEnd);
@@ -42,8 +42,8 @@ public class NFAGraph {
 
     // + 重复1-n次
     public void repeatPlus() {
-        State newStart = new State();
-        State newEnd = new State();
+        NFAState newStart = new NFAState();
+        NFAState newEnd = new NFAState();
         newStart.addNext(Constant.EPSILON, this.start);
         end.addNext(Constant.EPSILON, newEnd);
         end.addNext(Constant.EPSILON, start);

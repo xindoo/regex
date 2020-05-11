@@ -27,7 +27,7 @@ public class MatchStrategyManager {
             return matchStrategyMap.get(key);
         }
         // 单字符和字符集的匹配
-        if (key.length() == 0) {
+        if (key.length() == 1) {
             return matchStrategyMap.get(Constant.CHAR);
         } else {
             return matchStrategyMap.get(Constant.CHARSET);

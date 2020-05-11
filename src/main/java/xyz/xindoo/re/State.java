@@ -1,35 +1,38 @@
 package xyz.xindoo.re;
 
-import xyz.xindoo.re.nfa.strategy.MatchStrategy;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class State {
-    private static int idCnt = 0;
-    private int id;
-    private int stateType;
+    protected static int idCnt = 0;
+    protected int id;
+    protected int stateType;
 
     public State() {
         this.id = idCnt++;
     }
 
-    Map<String, List<State>> next = new HashMap<>();
+    public Map<String, List<State>> next = new HashMap<>();
 
-    public void addNext(String edge, State state) {
+    public void addNext(String edge, State nfaState) {
         List<State> list = next.get(edge);
         if (list == null) {
             list = new ArrayList<>();
             next.put(edge, list);
         }
-        list.add(state);
+        list.add(nfaState);
     }
+
     protected void setStateType() {
         stateType = 1;
     }
-    protected boolean isEndState() {
+    public boolean isEndState() {
         return stateType == 1;
+    }
+
+    public int getId() {
+        return this.id;
     }
 }

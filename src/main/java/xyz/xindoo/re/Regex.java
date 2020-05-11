@@ -1,31 +1,38 @@
 package xyz.xindoo.re;
 
+import xyz.xindoo.re.dfa.DFAGraph;
+import xyz.xindoo.re.dfa.DFAState;
 import xyz.xindoo.re.nfa.strategy.EpsilonMatchStrategy;
 import xyz.xindoo.re.nfa.NFAGraph;
 import xyz.xindoo.re.nfa.strategy.MatchStrategy;
 import xyz.xindoo.re.nfa.strategy.MatchStrategyManager;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Queue;
+import java.util.Set;
 public class Regex {
     private NFAGraph nfaGraph;
+    private DFAGraph dfaGraph;
     public static Regex compile(String regex) throws Exception {
         if (regex == null || regex.length() == 0) {
             throw new Exception("regex cannot be empty!");
         }
-        NFAGraph NFAGraph = regex2nfa(regex);
-        NFAGraph.end.setStateType();
-        return new Regex(NFAGraph);
+        NFAGraph nfaGraph = regex2nfa(regex);
+        nfaGraph.end.setStateType();
+        DFAGraph dfaGraph = convertNfa2Dfa(nfaGraph);
+        return new Regex(nfaGraph, dfaGraph);
     }
-
-    private Regex(NFAGraph NFAGraph) {
-        this.nfaGraph = NFAGraph;
+    private Regex(NFAGraph nfaGraph, DFAGraph dfaGraph) {
+        this.nfaGraph = nfaGraph;
+        this.dfaGraph = dfaGraph;
     }
-
     private static NFAGraph regex2nfa(String regex) {
         Reader reader = new Reader(regex);
-        NFAGraph NFAGraph = null;
+        NFAGraph nfaGraph = null;
         while (reader.hasNext()) {
             char ch = reader.next();
             String edge = null;
@@ -35,10 +42,10 @@ public class Regex {
                     String subRegex = reader.getSubRegex(reader);
                     NFAGraph newNFAGraph = regex2nfa(subRegex);
                     checkRepeat(reader, newNFAGraph);
-                    if (NFAGraph == null) {
-                        NFAGraph = newNFAGraph;
+                    if (nfaGraph == null) {
+                        nfaGraph = newNFAGraph;
                     } else {
-                        NFAGraph.addSeriesGraph(newNFAGraph);
+                        nfaGraph.addSeriesGraph(newNFAGraph);
                     }
                     break;
                 }
@@ -46,10 +53,10 @@ public class Regex {
                 case '|' : {
                     String remainRegex = reader.getRemainRegex(reader);
                     NFAGraph newNFAGraph = regex2nfa(remainRegex);
-                    if (NFAGraph == null) {
-                        NFAGraph = newNFAGraph;
+                    if (nfaGraph == null) {
+                        nfaGraph = newNFAGraph;
                     } else {
-                        NFAGraph.addParallelGraph(newNFAGraph);
+                        nfaGraph.addParallelGraph(newNFAGraph);
                     }
                     break;
                 }
@@ -109,19 +116,20 @@ public class Regex {
                     break;
                 }
             }
-
-            State start = new State();
-            State end = new State();
-            start.addNext(edge, end);
-            NFAGraph newNFAGraph = new NFAGraph(start, end);
-            checkRepeat(reader, newNFAGraph);
-            if (NFAGraph == null) {
-                NFAGraph = newNFAGraph;
-            } else {
-                NFAGraph.addSeriesGraph(newNFAGraph);
+            if (edge != null) {
+                NFAState start = new NFAState();
+                NFAState end = new NFAState();
+                start.addNext(edge, end);
+                NFAGraph newNFAGraph = new NFAGraph(start, end);
+                checkRepeat(reader, newNFAGraph);
+                if (nfaGraph == null) {
+                    nfaGraph = newNFAGraph;
+                } else {
+                    nfaGraph.addSeriesGraph(newNFAGraph);
+                }
             }
         }
-        return NFAGraph;
+        return nfaGraph;
     }
 
     private static void checkRepeat(Reader reader, NFAGraph newNFAGraph) {
@@ -152,15 +160,24 @@ public class Regex {
         return isMatch(text, 0, nfaGraph.start);
     }
 
-    private boolean isMatch(String text, int pos, State curState) {
+    public boolean isDFAMatch(String text) {
+        return isMatch(text, 0, dfaGraph.start);
+    }
+
+    private boolean isMatch(String text, int pos, State curNFAState) {
         if (pos == text.length()) {
-            if (curState.isEndState()) {
+            if (curNFAState.isEndState()) {
                 return true;
+            }
+            for (State nextState : curNFAState.next.getOrDefault(Constant.EPSILON, Collections.emptyList())) {
+                if (isMatch(text, pos, nextState)) {
+                    return true;
+                }
             }
             return false;
         }
 
-        for (Map.Entry<String, List<State>> entry : curState.next.entrySet()) {
+        for (Map.Entry<String, List<State>> entry : curNFAState.next.entrySet()) {
             String edge = entry.getKey();
             MatchStrategy matchStrategy = MatchStrategyManager.getStrategy(edge);
             if (matchStrategy instanceof EpsilonMatchStrategy) {
@@ -194,5 +211,91 @@ public class Regex {
             charSet += ch;
         }
         return charSet;
+    }
+
+    static int[] getRange(Reader reader) {
+        String rangeStr = "";
+        char ch;
+        while ((ch = reader.next()) != '}') {
+            if (ch == ' ') {
+                continue;
+            }
+            rangeStr += ch;
+        }
+        int[] res = new int[2];
+        if (!rangeStr.contains(",")) {
+            res[0] = Integer.parseInt(rangeStr);
+            res[1] = res[0];
+        } else {
+            String[] se = rangeStr.split(",", -1);
+            res[0] = Integer.parseInt(se[0]);
+            if (se[1].length() == 0) {
+                res[1] = Integer.MAX_VALUE;
+            } else {
+                res[1] = Integer.parseInt(se[1]);
+            }
+        }
+        return res;
+    }
+    private static DFAGraph convertNfa2Dfa(NFAGraph nfaGraph) {
+        DFAGraph dfaGraph = new DFAGraph();
+        Set<State> startStates = new HashSet<>();
+        startStates.addAll(getNextEStates(nfaGraph.start, new HashSet<>()));
+        if (startStates.size() == 0) {
+            startStates.add(nfaGraph.start);
+        }
+        dfaGraph.start = dfaGraph.getOrBuild(startStates);
+        Queue<DFAState> queue = new LinkedList<>();
+        Set<State> finishedStates = new HashSet<>();
+        queue.add(dfaGraph.start);
+        while (!queue.isEmpty()) {
+            DFAState curState = queue.poll();
+            for (State nfaState : curState.nfaStates) {
+                Set<State> nextStates = new HashSet<>();
+                Set<String> finishedEdges = new HashSet<>();
+                finishedEdges.add(Constant.EPSILON);
+                for (String edge : nfaState.next.keySet()) {
+                    if (finishedEdges.contains(edge)) {
+                        continue;
+                    }
+                    finishedEdges.add(edge);
+                    Set<State> efinishedState = new HashSet<>();
+                    for (State state : curState.nfaStates) {
+                        List<State> edgeStates = state.next.getOrDefault(edge, Collections.emptyList());
+                        nextStates.addAll(edgeStates);
+                        for (State eState : edgeStates) {  // 添加E可达节点
+                            if (efinishedState.contains(eState)) {
+                                continue;
+                            }
+                            nextStates.addAll(getNextEStates(eState, efinishedState));
+                            efinishedState.add(eState);
+                        }
+                    }
+                    DFAState nextDFAstate = dfaGraph.getOrBuild(nextStates);
+                    if (!finishedStates.contains(nextDFAstate)) {
+                        queue.add(nextDFAstate);
+                    }
+                    curState.addNext(edge, nextDFAstate);
+                }
+            }
+            finishedStates.add(curState);
+        }
+        return dfaGraph;
+    }
+
+    private static Set<State> getNextEStates(State curState, Set<State> stateSet) {
+        if (!curState.next.containsKey(Constant.EPSILON)) {
+            return Collections.emptySet();
+        }
+        Set<State> res = new HashSet<>();
+        for (State state : curState.next.get(Constant.EPSILON)) {
+            if (stateSet.contains(state)) {
+                continue;
+            }
+            res.add(state);
+            res.addAll(getNextEStates(state, stateSet));
+            stateSet.add(state);
+        }
+        return res;
     }
 }
