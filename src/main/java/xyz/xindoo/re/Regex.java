@@ -1,12 +1,14 @@
 package xyz.xindoo.re;
 
+import xyz.xindoo.re.common.Constant;
+import xyz.xindoo.re.common.Reader;
+import xyz.xindoo.re.common.State;
 import xyz.xindoo.re.dfa.DFAGraph;
 import xyz.xindoo.re.dfa.DFAState;
-import xyz.xindoo.re.nfa.strategy.EpsilonMatchStrategy;
 import xyz.xindoo.re.nfa.NFAGraph;
+import xyz.xindoo.re.nfa.NFAState;
 import xyz.xindoo.re.nfa.strategy.MatchStrategy;
 import xyz.xindoo.re.nfa.strategy.MatchStrategyManager;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -14,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+
 public class Regex {
     private NFAGraph nfaGraph;
     private DFAGraph dfaGraph;
@@ -132,111 +135,6 @@ public class Regex {
         return nfaGraph;
     }
 
-    private static void checkRepeat(Reader reader, NFAGraph newNFAGraph) {
-        char nextCh = reader.peak();
-        switch (nextCh) {
-            case '*': {
-                newNFAGraph.repeatStar();
-                reader.next();
-                break;
-            } case '+': {
-                newNFAGraph.repeatPlus();
-                reader.next();
-                break;
-            } case '?' : {
-                newNFAGraph.addSToE();
-                reader.next();
-                break;
-            } case '{' : {
-                //
-                break;
-            }  default : {
-                return;
-            }
-        }
-    }
-
-    public boolean isMatch(String text) {
-        return isMatch(text, 0, nfaGraph.start);
-    }
-
-    public boolean isDFAMatch(String text) {
-        return isMatch(text, 0, dfaGraph.start);
-    }
-
-    private boolean isMatch(String text, int pos, State curNFAState) {
-        if (pos == text.length()) {
-            if (curNFAState.isEndState()) {
-                return true;
-            }
-            for (State nextState : curNFAState.next.getOrDefault(Constant.EPSILON, Collections.emptyList())) {
-                if (isMatch(text, pos, nextState)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        for (Map.Entry<String, List<State>> entry : curNFAState.next.entrySet()) {
-            String edge = entry.getKey();
-            MatchStrategy matchStrategy = MatchStrategyManager.getStrategy(edge);
-            if (matchStrategy instanceof EpsilonMatchStrategy) {
-                for (State nextState : entry.getValue()) {
-                    if (isMatch(text, pos, nextState)) {
-                        return true;
-                    }
-                }
-            } else {
-                if (!matchStrategy.isMatch(text.charAt(pos), edge)) {
-                    continue;
-                }
-                // 遍历匹配策略
-                for (State nextState : entry.getValue()) {
-                    if (isMatch(text, pos + 1, nextState)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * 暂时只支持字母 数字
-     * */
-    static String getCharSetMatch(Reader reader) {
-        String charSet = "";
-        char ch;
-        while ((ch = reader.next()) != ']') {
-            charSet += ch;
-        }
-        return charSet;
-    }
-
-    static int[] getRange(Reader reader) {
-        String rangeStr = "";
-        char ch;
-        while ((ch = reader.next()) != '}') {
-            if (ch == ' ') {
-                continue;
-            }
-            rangeStr += ch;
-        }
-        int[] res = new int[2];
-        if (!rangeStr.contains(",")) {
-            res[0] = Integer.parseInt(rangeStr);
-            res[1] = res[0];
-        } else {
-            String[] se = rangeStr.split(",", -1);
-            res[0] = Integer.parseInt(se[0]);
-            if (se[1].length() == 0) {
-                res[1] = Integer.MAX_VALUE;
-            } else {
-                res[1] = Integer.parseInt(se[1]);
-            }
-        }
-        return res;
-    }
     private static DFAGraph convertNfa2Dfa(NFAGraph nfaGraph) {
         DFAGraph dfaGraph = new DFAGraph();
         Set<State> startStates = new HashSet<>();
@@ -281,6 +179,116 @@ public class Regex {
             finishedStates.add(curState);
         }
         return dfaGraph;
+    }
+
+    private static void checkRepeat(Reader reader, NFAGraph newNFAGraph) {
+        char nextCh = reader.peak();
+        switch (nextCh) {
+            case '*': {
+                newNFAGraph.repeatStar();
+                reader.next();
+                break;
+            } case '+': {
+                newNFAGraph.repeatPlus();
+                reader.next();
+                break;
+            } case '?' : {
+                newNFAGraph.addSToE();
+                reader.next();
+                break;
+            } case '{' : {
+                //
+                break;
+            }  default : {
+                return;
+            }
+        }
+    }
+
+    public boolean isMatch(String text) {
+        return isMatch(text, 0);
+    }
+
+    public boolean isMatch(String text, int mode) {
+        State start = nfaGraph.start;
+        if (mode == 1) {
+            start = dfaGraph.start;
+        }
+        return isMatch(text, 0, start);
+    }
+
+    private boolean isMatch(String text, int pos, State curNFAState) {
+        if (pos == text.length()) {
+            if (curNFAState.isEndState()) {
+                return true;
+            }
+            for (State nextState : curNFAState.next.getOrDefault(Constant.EPSILON, Collections.emptyList())) {
+                if (isMatch(text, pos, nextState)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        for (Map.Entry<String, List<State>> entry : curNFAState.next.entrySet()) {
+            String edge = entry.getKey();
+            if (Constant.EPSILON.equals(edge)) {
+                for (State nextState : entry.getValue()) {
+                    if (isMatch(text, pos, nextState)) {
+                        return true;
+                    }
+                }
+            } else {
+                MatchStrategy matchStrategy = MatchStrategyManager.getStrategy(edge);
+                if (!matchStrategy.isMatch(text.charAt(pos), edge)) {
+                    continue;
+                }
+                // 遍历匹配策略
+                for (State nextState : entry.getValue()) {
+                    if (isMatch(text, pos + 1, nextState)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 暂时只支持字母 数字
+     * */
+    private static String getCharSetMatch(Reader reader) {
+        String charSet = "";
+        char ch;
+        while ((ch = reader.next()) != ']') {
+            charSet += ch;
+        }
+        return charSet;
+    }
+
+    private static int[] getRange(Reader reader) {
+        String rangeStr = "";
+        char ch;
+        while ((ch = reader.next()) != '}') {
+            if (ch == ' ') {
+                continue;
+            }
+            rangeStr += ch;
+        }
+        int[] res = new int[2];
+        if (!rangeStr.contains(",")) {
+            res[0] = Integer.parseInt(rangeStr);
+            res[1] = res[0];
+        } else {
+            String[] se = rangeStr.split(",", -1);
+            res[0] = Integer.parseInt(se[0]);
+            if (se[1].length() == 0) {
+                res[1] = Integer.MAX_VALUE;
+            } else {
+                res[1] = Integer.parseInt(se[1]);
+            }
+        }
+        return res;
     }
 
     private static Set<State> getNextEStates(State curState, Set<State> stateSet) {

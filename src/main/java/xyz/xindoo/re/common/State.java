@@ -1,4 +1,4 @@
-package xyz.xindoo.re;
+package xyz.xindoo.re.common;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,9 +25,10 @@ public class State {
         list.add(nfaState);
     }
 
-    protected void setStateType() {
+    public void setStateType() {
         stateType = 1;
     }
+
     public boolean isEndState() {
         return stateType == 1;
     }

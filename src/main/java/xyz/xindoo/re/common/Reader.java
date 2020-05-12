@@ -1,4 +1,4 @@
-package xyz.xindoo.re;
+package xyz.xindoo.re.common;
 
 public class Reader {
     private int cur = 0;

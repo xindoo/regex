@@ -1,7 +1,6 @@
 package xyz.xindoo.re.nfa;
 
-import xyz.xindoo.re.Constant;
-import xyz.xindoo.re.NFAState;
+import xyz.xindoo.re.common.Constant;
 
 public class NFAGraph {
     public NFAState start;

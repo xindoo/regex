@@ -15,14 +15,14 @@ public class RegexTest {
         System.out.println(regex.isMatch("aabcabcabcabcabcabcdb"));
 
         System.out.println("*********");
-        System.out.println(regex.isDFAMatch("ac"));
-        System.out.println(regex.isDFAMatch("ac"));
-        System.out.println(regex.isDFAMatch("a"));
-        System.out.println(regex.isDFAMatch("a   bcccdb"));
-        System.out.println(regex.isDFAMatch("ab"));
-        System.out.println(regex.isDFAMatch("abcd"));
-        System.out.println(regex.isDFAMatch("a3abcd"));
-        System.out.println(regex.isDFAMatch("a33333defd"));
-        System.out.println(regex.isDFAMatch("aabcabcabcabcabcabcdb"));
+        System.out.println(regex.isMatch("ac", 1));
+        System.out.println(regex.isMatch("ac", 1));
+        System.out.println(regex.isMatch("a", 1));
+        System.out.println(regex.isMatch("a   bcccdb", 1));
+        System.out.println(regex.isMatch("ab", 1));
+        System.out.println(regex.isMatch("abcd", 1));
+        System.out.println(regex.isMatch("a3abcd",1));
+        System.out.println(regex.isMatch("a33333defd",1));
+        System.out.println(regex.isMatch("aabcabcabcabcabcabcdb", 1));
     }
 }

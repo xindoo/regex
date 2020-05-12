@@ -1,6 +1,6 @@
 package xyz.xindoo.re.nfa.strategy;
 
-import xyz.xindoo.re.Constant;
+import xyz.xindoo.re.common.Constant;
 
 import java.util.HashMap;
 import java.util.Map;
