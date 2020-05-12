@@ -1,6 +1,7 @@
 package xyz.xindoo.re.dfa;
 
 import xyz.xindoo.re.common.State;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;

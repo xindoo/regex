@@ -20,6 +20,7 @@ import java.util.Set;
 public class Regex {
     private NFAGraph nfaGraph;
     private DFAGraph dfaGraph;
+
     public static Regex compile(String regex) throws Exception {
         if (regex == null || regex.length() == 0) {
             throw new Exception("regex cannot be empty!");
@@ -29,10 +30,12 @@ public class Regex {
         DFAGraph dfaGraph = convertNfa2Dfa(nfaGraph);
         return new Regex(nfaGraph, dfaGraph);
     }
+
     private Regex(NFAGraph nfaGraph, DFAGraph dfaGraph) {
         this.nfaGraph = nfaGraph;
         this.dfaGraph = dfaGraph;
     }
+
     private static NFAGraph regex2nfa(String regex) {
         Reader reader = new Reader(regex);
         NFAGraph nfaGraph = null;

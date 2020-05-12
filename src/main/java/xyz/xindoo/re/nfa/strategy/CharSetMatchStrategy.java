@@ -1,6 +1,6 @@
 package xyz.xindoo.re.nfa.strategy;
 
-public class CharSetMatchStrategy extends MatchStrategy{
+public class CharSetMatchStrategy extends MatchStrategy {
     @Override
     public boolean isMatch(char c, String charSet) {
         boolean res = false;

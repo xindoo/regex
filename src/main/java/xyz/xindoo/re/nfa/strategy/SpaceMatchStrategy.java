@@ -1,6 +1,6 @@
 package xyz.xindoo.re.nfa.strategy;
 
-public class SpaceMatchStrategy extends MatchStrategy{
+public class SpaceMatchStrategy extends MatchStrategy {
     private boolean isReverse;
 
     public SpaceMatchStrategy(boolean isReverse) {

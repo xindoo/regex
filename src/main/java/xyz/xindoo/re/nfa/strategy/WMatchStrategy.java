@@ -2,8 +2,8 @@ package xyz.xindoo.re.nfa.strategy;
 
 /**
  * 匹配 \w和\W
- * */
-public class WMatchStrategy extends MatchStrategy{
+ */
+public class WMatchStrategy extends MatchStrategy {
 
     public WMatchStrategy(boolean isReverse) {
         this.isReverse = isReverse;

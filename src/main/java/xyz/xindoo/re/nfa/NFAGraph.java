@@ -5,6 +5,7 @@ import xyz.xindoo.re.common.Constant;
 public class NFAGraph {
     public NFAState start;
     public NFAState end;
+
     public NFAGraph(NFAState start, NFAState end) {
         this.start = start;
         this.end = end;

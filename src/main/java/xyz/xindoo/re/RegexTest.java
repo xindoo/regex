@@ -21,8 +21,8 @@ public class RegexTest {
         System.out.println(regex.isMatch("a   bcccdb", 1));
         System.out.println(regex.isMatch("ab", 1));
         System.out.println(regex.isMatch("abcd", 1));
-        System.out.println(regex.isMatch("a3abcd",1));
-        System.out.println(regex.isMatch("a33333defd",1));
+        System.out.println(regex.isMatch("a3abcd", 1));
+        System.out.println(regex.isMatch("a33333defd", 1));
         System.out.println(regex.isMatch("aabcabcabcabcabcabcdb", 1));
     }
 }

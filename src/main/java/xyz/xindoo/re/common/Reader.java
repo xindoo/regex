@@ -19,7 +19,8 @@ public class Reader {
         }
         return chars[cur++];
     }
-    boolean hasNext() {
+
+    public boolean hasNext() {
         return cur < chars.length;
     }
 

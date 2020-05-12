@@ -7,6 +7,7 @@ import java.util.Map;
 
 public class MatchStrategyManager {
     private static Map<String, MatchStrategy> matchStrategyMap;
+
     static {
         matchStrategyMap = new HashMap<>();
         matchStrategyMap.put("\\d", new DigitalMatchStrategy(false));
