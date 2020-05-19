@@ -9,10 +9,11 @@ import xyz.xindoo.re.nfa.NFAGraph;
 import xyz.xindoo.re.nfa.NFAState;
 import xyz.xindoo.re.nfa.strategy.MatchStrategy;
 import xyz.xindoo.re.nfa.strategy.MatchStrategyManager;
+
+import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -34,6 +35,49 @@ public class Regex {
     private Regex(NFAGraph nfaGraph, DFAGraph dfaGraph) {
         this.nfaGraph = nfaGraph;
         this.dfaGraph = dfaGraph;
+    }
+
+    public void printNfa() {
+        Queue<State> queue = new ArrayDeque<>();
+        Set<Integer> addedStates = new HashSet<>();
+        queue.add(nfaGraph.start);
+        addedStates.add(nfaGraph.start.getId());
+        while (!queue.isEmpty()) {
+            State curState = queue.poll();
+            for (Map.Entry<String, Set<State>> entry : curState.next.entrySet()) {
+                String key = entry.getKey();
+                Set<State> nexts = entry.getValue();
+                for (State next : nexts) {
+                    System.out.printf("%2d->%2d  %s\n", curState.getId(), next.getId(), key);
+                    if (!addedStates.contains(next.getId())) {
+                        queue.add(next);
+                        addedStates.add(next.getId());
+                    }
+                }
+            }
+        }
+    }
+
+    public void printDfa() {
+        Queue<State> queue = new ArrayDeque<>();
+        Set<String> addedStates = new HashSet<>();
+        queue.add(dfaGraph.start);
+        addedStates.add(((DFAState)dfaGraph.start).getAllStateIds());
+        while (!queue.isEmpty()) {
+            State curState = queue.poll();
+
+            for (Map.Entry<String, Set<State>> entry : curState.next.entrySet()) {
+                String key = entry.getKey();
+                Set<State> nexts = entry.getValue();
+                for (State next : nexts) {
+                    System.out.printf("%s -> %s  %s \n", ((DFAState)curState).getAllStateIds(),((DFAState)next).getAllStateIds(),  key);
+                    if (!addedStates.contains(((DFAState)next).getAllStateIds())) {
+                        queue.add(next);
+                        addedStates.add(((DFAState)next).getAllStateIds());
+                    }
+                }
+            }
+        }
     }
 
     private static NFAGraph regex2nfa(String regex) {
@@ -162,7 +206,7 @@ public class Regex {
                     finishedEdges.add(edge);
                     Set<State> efinishedState = new HashSet<>();
                     for (State state : curState.nfaStates) {
-                        List<State> edgeStates = state.next.getOrDefault(edge, Collections.emptyList());
+                        Set<State> edgeStates = state.next.getOrDefault(edge, Collections.emptySet());
                         nextStates.addAll(edgeStates);
                         for (State eState : edgeStates) {  // 添加E可达节点
                             if (efinishedState.contains(eState)) {
@@ -225,7 +269,7 @@ public class Regex {
             if (curNFAState.isEndState()) {
                 return true;
             }
-            for (State nextState : curNFAState.next.getOrDefault(Constant.EPSILON, Collections.emptyList())) {
+            for (State nextState : curNFAState.next.getOrDefault(Constant.EPSILON, Collections.emptySet())) {
                 if (isMatch(text, pos, nextState)) {
                     return true;
                 }
@@ -233,7 +277,7 @@ public class Regex {
             return false;
         }
 
-        for (Map.Entry<String, List<State>> entry : curNFAState.next.entrySet()) {
+        for (Map.Entry<String, Set<State>> entry : curNFAState.next.entrySet()) {
             String edge = entry.getKey();
             if (Constant.EPSILON.equals(edge)) {
                 for (State nextState : entry.getValue()) {

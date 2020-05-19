@@ -2,8 +2,10 @@ package xyz.xindoo.re.common;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class State {
     protected static int idCnt = 0;
@@ -14,15 +16,15 @@ public class State {
         this.id = idCnt++;
     }
 
-    public Map<String, List<State>> next = new HashMap<>();
+    public Map<String, Set<State>> next = new HashMap<>();
 
     public void addNext(String edge, State nfaState) {
-        List<State> list = next.get(edge);
-        if (list == null) {
-            list = new ArrayList<>();
-            next.put(edge, list);
+        Set<State> set = next.get(edge);
+        if (set == null) {
+            set = new HashSet<>();
+            next.put(edge, set);
         }
-        list.add(nfaState);
+        set.add(nfaState);
     }
 
     public void setStateType() {

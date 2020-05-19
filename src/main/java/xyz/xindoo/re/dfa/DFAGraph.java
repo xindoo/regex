@@ -8,9 +8,10 @@ import java.util.Set;
 
 public class DFAGraph {
 
-    private Map<String, DFAState> map = new HashMap<>();
+    private Map<String, DFAState> nfaStates2dfaState = new HashMap<>();
     public DFAState start = new DFAState();
 
+    // 这里用map保存NFAState结合是已有对应的DFAState, 有就直接拿出来用
     public DFAState getOrBuild(Set<State> states) {
         String allStateIds = "";
         int[] ids = states.stream()
@@ -21,10 +22,10 @@ public class DFAGraph {
             allStateIds += "#";
             allStateIds += id;
         }
-        if (!map.containsKey(allStateIds)) {
+        if (!nfaStates2dfaState.containsKey(allStateIds)) {
             DFAState dfaState = new DFAState(allStateIds, states);
-            map.put(allStateIds, dfaState);
+            nfaStates2dfaState.put(allStateIds, dfaState);
         }
-        return map.get(allStateIds);
+        return nfaStates2dfaState.get(allStateIds);
     }
 }
