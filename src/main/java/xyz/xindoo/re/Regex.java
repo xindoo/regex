@@ -14,6 +14,7 @@ import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -65,7 +66,6 @@ public class Regex {
         addedStates.add(((DFAState)dfaGraph.start).getAllStateIds());
         while (!queue.isEmpty()) {
             State curState = queue.poll();
-
             for (Map.Entry<String, Set<State>> entry : curState.next.entrySet()) {
                 String key = entry.getKey();
                 Set<State> nexts = entry.getValue();
@@ -114,6 +114,7 @@ public class Regex {
                     edge = getCharSetMatch(reader);
                     break;
                 }
+                // 暂时未支持零宽断言
                 case '^' : {
                     break;
                 }
@@ -185,6 +186,7 @@ public class Regex {
     private static DFAGraph convertNfa2Dfa(NFAGraph nfaGraph) {
         DFAGraph dfaGraph = new DFAGraph();
         Set<State> startStates = new HashSet<>();
+        // 用NFA图的起始节点构造DFA的起始节点
         startStates.addAll(getNextEStates(nfaGraph.start, new HashSet<>()));
         if (startStates.size() == 0) {
             startStates.add(nfaGraph.start);
@@ -192,6 +194,7 @@ public class Regex {
         dfaGraph.start = dfaGraph.getOrBuild(startStates);
         Queue<DFAState> queue = new LinkedList<>();
         Set<State> finishedStates = new HashSet<>();
+        // 如果BFS的方式从已找到的起始节点遍历并构建DFA
         queue.add(dfaGraph.start);
         while (!queue.isEmpty()) {
             DFAState curState = queue.poll();
@@ -244,7 +247,7 @@ public class Regex {
                 reader.next();
                 break;
             } case '{' : {
-                //
+                // 暂未支持{}指定重复次数
                 break;
             }  default : {
                 return;
@@ -252,57 +255,8 @@ public class Regex {
         }
     }
 
-    public boolean isMatch(String text) {
-        return isMatch(text, 0);
-    }
-
-    public boolean isMatch(String text, int mode) {
-        State start = nfaGraph.start;
-        if (mode == 1) {
-            start = dfaGraph.start;
-        }
-        return isMatch(text, 0, start);
-    }
-
-    private boolean isMatch(String text, int pos, State curNFAState) {
-        if (pos == text.length()) {
-            if (curNFAState.isEndState()) {
-                return true;
-            }
-            for (State nextState : curNFAState.next.getOrDefault(Constant.EPSILON, Collections.emptySet())) {
-                if (isMatch(text, pos, nextState)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        for (Map.Entry<String, Set<State>> entry : curNFAState.next.entrySet()) {
-            String edge = entry.getKey();
-            if (Constant.EPSILON.equals(edge)) {
-                for (State nextState : entry.getValue()) {
-                    if (isMatch(text, pos, nextState)) {
-                        return true;
-                    }
-                }
-            } else {
-                MatchStrategy matchStrategy = MatchStrategyManager.getStrategy(edge);
-                if (!matchStrategy.isMatch(text.charAt(pos), edge)) {
-                    continue;
-                }
-                // 遍历匹配策略
-                for (State nextState : entry.getValue()) {
-                    if (isMatch(text, pos + 1, nextState)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
     /**
-     * 暂时只支持字母 数字
+     * 获取[]中表示的字符集,只支持字母 数字
      * */
     private static String getCharSetMatch(Reader reader) {
         String charSet = "";
@@ -338,6 +292,7 @@ public class Regex {
         return res;
     }
 
+    // 获取Epsilon可达节点列表
     private static Set<State> getNextEStates(State curState, Set<State> stateSet) {
         if (!curState.next.containsKey(Constant.EPSILON)) {
             return Collections.emptySet();
@@ -352,5 +307,121 @@ public class Regex {
             stateSet.add(state);
         }
         return res;
+    }
+
+    public boolean isMatch(String text) {
+        return isMatch(text, 0);
+    }
+
+    public boolean isMatch(String text, int mode) {
+        State start = nfaGraph.start;
+        if (mode == 1) {
+            start = dfaGraph.start;
+        }
+        return isMatch(text, 0, start);
+    }
+
+    /**
+     * 匹配过程就是根据输入遍历图的过程, 这里DFA和NFA用了同样的代码, 但实际上因为DFA的特性是不会产生回溯的,
+     * 所以DFA可以换成非递归的形式
+     */
+
+    private boolean isMatch(String text, int pos, State curState) {
+        if (pos == text.length()) {
+            if (curState.isEndState()) {
+                return true;
+            }
+            for (State nextState : curState.next.getOrDefault(Constant.EPSILON, Collections.emptySet())) {
+                if (isMatch(text, pos, nextState)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        for (Map.Entry<String, Set<State>> entry : curState.next.entrySet()) {
+            String edge = entry.getKey();
+            if (Constant.EPSILON.equals(edge)) {
+                for (State nextState : entry.getValue()) {
+                    if (isMatch(text, pos, nextState)) {
+                        return true;
+                    }
+                }
+            } else {
+                MatchStrategy matchStrategy = MatchStrategyManager.getStrategy(edge);
+                if (!matchStrategy.isMatch(text.charAt(pos), edge)) {
+                    continue;
+                }
+                // 遍历匹配策略
+                for (State nextState : entry.getValue()) {
+                    if (isMatch(text, pos + 1, nextState)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public List<String> match(String text) {
+        return match(text, 0);
+    }
+
+    public List<String> match(String text, int mod) {
+        int s = 0;
+        int e = -1;
+        List<String> res = new LinkedList<>();
+        while (s != text.length()) {
+            e = getMatchEnd(text, s, dfaGraph.start);
+            if (e != -1) {
+                res.add(text.substring(s, e));
+                s = e;
+            } else {
+                s++;
+            }
+        }
+        return res;
+    }
+
+    // 获取正则表达式在字符串中能匹配到的结尾的位置
+    private int getMatchEnd(String text, int pos, State curState) {
+        int end = -1;
+        if (curState.isEndState()) {
+            return pos;
+        }
+
+        if (pos == text.length()) {
+            for (State nextState : curState.next.getOrDefault(Constant.EPSILON, Collections.emptySet())) {
+                end = getMatchEnd(text, pos, nextState);
+                if (end != -1) {
+                    return end;
+                }
+            }
+        }
+
+        for (Map.Entry<String, Set<State>> entry : curState.next.entrySet()) {
+            String edge = entry.getKey();
+            if (Constant.EPSILON.equals(edge)) {
+                for (State nextState : entry.getValue()) {
+                    end = getMatchEnd(text, pos, nextState);
+                    if (end != -1) {
+                        return end;
+                    }
+                }
+            } else {
+                MatchStrategy matchStrategy = MatchStrategyManager.getStrategy(edge);
+                if (!matchStrategy.isMatch(text.charAt(pos), edge)) {
+                    continue;
+                }
+                // 遍历匹配策略
+                for (State nextState : entry.getValue()) {
+                    end = getMatchEnd(text, pos + 1, nextState);
+                    if (end != -1) {
+                        return end;
+                    }
+                }
+            }
+        }
+        return -1;
     }
 }

@@ -1,8 +1,11 @@
 package xyz.xindoo.re;
 
+import java.util.List;
+
 public class RegexTest {
     public static void main(String[] args) throws Exception {
-        Regex regex = Regex.compile("a(b|c)*");
+        Regex regex = Regex.compile("a(b|c)*c");
+        List<String> res = regex.match("aabacabbbcaccc");
         regex.printNfa();
         System.out.println("");
         regex.printDfa();
