@@ -23,9 +23,9 @@ public class Regex {
     private NFAGraph nfaGraph;
     private DFAGraph dfaGraph;
 
-    public static Regex compile(String regex) throws Exception {
+    public static Regex compile(String regex) {
         if (regex == null || regex.length() == 0) {
-            throw new Exception("regex cannot be empty!");
+            return null;
         }
         NFAGraph nfaGraph = regex2nfa(regex);
         nfaGraph.end.setStateType();

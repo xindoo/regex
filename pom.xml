@@ -8,6 +8,12 @@
     <artifactId>regex</artifactId>
     <version>0.0.2-SNAPSHOT</version>
     <dependencies>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <version>1.21</version>
+            <!--            <scope>test</scope>-->
+        </dependency>
     </dependencies>
     <build>
         <plugins>
