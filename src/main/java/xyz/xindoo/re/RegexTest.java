@@ -4,11 +4,12 @@ import java.util.List;
 
 public class RegexTest {
     public static void main(String[] args) throws Exception {
-        Regex regex = Regex.compile("a(b|c)*c");
+        Regex regex = Regex.compile("a(b|c)*");
         List<String> res = regex.match("aabacabbbcaccc");
         regex.printNfa();
         System.out.println("");
         regex.printDfa();
+
 //        Regex regex = Regex.compile("a\\s+.+b");
         System.out.println(regex.isMatch("ac"));
         System.out.println(regex.isMatch("acc"));

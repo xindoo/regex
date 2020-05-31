@@ -211,7 +211,8 @@ public class Regex {
                     for (State state : curState.nfaStates) {
                         Set<State> edgeStates = state.next.getOrDefault(edge, Collections.emptySet());
                         nextStates.addAll(edgeStates);
-                        for (State eState : edgeStates) {  // 添加E可达节点
+                        for (State eState : edgeStates) {
+                            // 添加E可达节点
                             if (efinishedState.contains(eState)) {
                                 continue;
                             }
@@ -219,6 +220,7 @@ public class Regex {
                             efinishedState.add(eState);
                         }
                     }
+                    // 将NFA节点列表转化为DFA节点，如果已经有对应的DFA节点就返回，否则创建一个新的DFA节点
                     DFAState nextDFAstate = dfaGraph.getOrBuild(nextStates);
                     if (!finishedStates.contains(nextDFAstate)) {
                         queue.add(nextDFAstate);
@@ -325,7 +327,6 @@ public class Regex {
      * 匹配过程就是根据输入遍历图的过程, 这里DFA和NFA用了同样的代码, 但实际上因为DFA的特性是不会产生回溯的,
      * 所以DFA可以换成非递归的形式
      */
-
     private boolean isMatch(String text, int pos, State curState) {
         if (pos == text.length()) {
             if (curState.isEndState()) {
@@ -341,6 +342,7 @@ public class Regex {
 
         for (Map.Entry<String, Set<State>> entry : curState.next.entrySet()) {
             String edge = entry.getKey();
+            // 如果是DFA模式,不会有EPSILON边
             if (Constant.EPSILON.equals(edge)) {
                 for (State nextState : entry.getValue()) {
                     if (isMatch(text, pos, nextState)) {
@@ -354,6 +356,10 @@ public class Regex {
                 }
                 // 遍历匹配策略
                 for (State nextState : entry.getValue()) {
+                    // 如果是DFA匹配模式,entry.getValue()虽然是set,但里面只会有一个元素,所以不需要回溯
+                    if (nextState instanceof DFAState) {
+                        return isMatch(text, pos + 1, nextState);
+                    }
                     if (isMatch(text, pos + 1, nextState)) {
                         return true;
                     }
@@ -361,6 +367,31 @@ public class Regex {
             }
         }
         return false;
+    }
+
+    public boolean isDfaMatch(String text) {
+        return isDfaMatch(text, 0, dfaGraph.start);
+    }
+
+    private boolean isDfaMatch(String text, int pos, State startState) {
+        State curState = startState;
+        while (pos < text.length()) {
+            boolean canContinue = false;
+            for (Map.Entry<String, Set<State>> entry : curState.next.entrySet()) {
+                String edge = entry.getKey();
+                MatchStrategy matchStrategy = MatchStrategyManager.getStrategy(edge);
+                if (matchStrategy.isMatch(text.charAt(pos), edge)) {
+                    curState = entry.getValue().stream().findFirst().orElse(null);
+                    pos++;
+                    canContinue = true;
+                    break;
+                }
+            }
+            if (!canContinue) {
+                return false;
+            }
+        }
+        return curState.isEndState();
     }
 
     public List<String> match(String text) {
