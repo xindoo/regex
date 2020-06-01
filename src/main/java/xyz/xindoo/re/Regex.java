@@ -329,21 +329,22 @@ public class Regex {
      */
     private boolean isMatch(String text, int pos, State curState) {
         if (pos == text.length()) {
-            if (curState.isEndState()) {
-                return true;
-            }
             for (State nextState : curState.next.getOrDefault(Constant.EPSILON, Collections.emptySet())) {
                 if (isMatch(text, pos, nextState)) {
                     return true;
                 }
+            }
+            if (curState.isEndState()) {
+                return true;
             }
             return false;
         }
 
         for (Map.Entry<String, Set<State>> entry : curState.next.entrySet()) {
             String edge = entry.getKey();
-            // 如果是DFA模式,不会有EPSILON边
+            // 这个if和else的先后顺序决定了是贪婪匹配还是非贪婪匹配
             if (Constant.EPSILON.equals(edge)) {
+                // 如果是DFA模式,不会有EPSILON边,所以不会进这
                 for (State nextState : entry.getValue()) {
                     if (isMatch(text, pos, nextState)) {
                         return true;
