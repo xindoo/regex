@@ -38,6 +38,9 @@ public class Regex {
         this.dfaGraph = dfaGraph;
     }
 
+    /**
+     * 有向图的广度优先遍历
+     */
     public void printNfa() {
         Queue<State> queue = new ArrayDeque<>();
         Set<Integer> addedStates = new HashSet<>();
@@ -63,7 +66,7 @@ public class Regex {
         Queue<State> queue = new ArrayDeque<>();
         Set<String> addedStates = new HashSet<>();
         queue.add(dfaGraph.start);
-        addedStates.add(((DFAState)dfaGraph.start).getAllStateIds());
+        addedStates.add(dfaGraph.start.getAllStateIds());
         while (!queue.isEmpty()) {
             State curState = queue.poll();
             for (Map.Entry<String, Set<State>> entry : curState.next.entrySet()) {
@@ -118,6 +121,7 @@ public class Regex {
                 case '^' : {
                     break;
                 }
+                // 暂未支持
                 case '$' : {
                     break;
                 }
@@ -183,6 +187,9 @@ public class Regex {
         return nfaGraph;
     }
 
+    /**
+     * 使用子集构造法把nfa转成dfa,具体可以参考博客 https://blog.csdn.net/xindoo/article/details/106458165
+     */
     private static DFAGraph convertNfa2Dfa(NFAGraph nfaGraph) {
         DFAGraph dfaGraph = new DFAGraph();
         Set<State> startStates = new HashSet<>();
