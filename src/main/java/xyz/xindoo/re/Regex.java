@@ -3,6 +3,7 @@ package xyz.xindoo.re;
 import xyz.xindoo.re.common.Constant;
 import xyz.xindoo.re.common.Reader;
 import xyz.xindoo.re.common.State;
+import xyz.xindoo.re.common.StateType;
 import xyz.xindoo.re.dfa.DFAGraph;
 import xyz.xindoo.re.dfa.DFAState;
 import xyz.xindoo.re.nfa.NFAGraph;
@@ -28,14 +29,16 @@ public class Regex {
             return null;
         }
         NFAGraph nfaGraph = regex2nfa(regex);
-        nfaGraph.end.setStateType();
+        nfaGraph.end.setStateType(StateType.END); // 将NFA的end节点标记为终止态
         DFAGraph dfaGraph = convertNfa2Dfa(nfaGraph);
         return new Regex(nfaGraph, dfaGraph);
     }
 
     private Regex(NFAGraph nfaGraph, DFAGraph dfaGraph) {
         this.nfaGraph = nfaGraph;
+//        printNfa();
         this.dfaGraph = dfaGraph;
+//        printDfa();
     }
 
     /**
@@ -200,10 +203,13 @@ public class Regex {
         }
         dfaGraph.start = dfaGraph.getOrBuild(startStates);
         Queue<DFAState> queue = new LinkedList<>();
-        Set<State> finishedStates = new HashSet<>();
+        Set<DFAState> finishedStates = new HashSet<>();
         // 如果BFS的方式从已找到的起始节点遍历并构建DFA
         queue.add(dfaGraph.start);
+
         while (!queue.isEmpty()) {
+            // 对当前节点已添加的边做去重,不放到queue和next里.
+            Set<DFAState> addedNextStates = new HashSet<>();
             DFAState curState = queue.poll();
             for (State nfaState : curState.nfaStates) {
                 Set<State> nextStates = new HashSet<>();
@@ -229,10 +235,11 @@ public class Regex {
                     }
                     // 将NFA节点列表转化为DFA节点，如果已经有对应的DFA节点就返回，否则创建一个新的DFA节点
                     DFAState nextDFAstate = dfaGraph.getOrBuild(nextStates);
-                    if (!finishedStates.contains(nextDFAstate)) {
+                    if (!finishedStates.contains(nextDFAstate) && !addedNextStates.contains(nextDFAstate)) {
                         queue.add(nextDFAstate);
+                        addedNextStates.add(nextDFAstate); // 对queue里的数据做去重
+                        curState.addNext(edge, nextDFAstate);
                     }
-                    curState.addNext(edge, nextDFAstate);
                 }
             }
             finishedStates.add(curState);
@@ -462,5 +469,9 @@ public class Regex {
             }
         }
         return -1;
+    }
+    // todo, 使用hopcraft算法将dfa最小化
+    private DFAGraph hopcroft(DFAGraph dfaGraph){
+        return new DFAGraph();
     }
 }

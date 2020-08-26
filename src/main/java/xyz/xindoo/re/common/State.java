@@ -1,19 +1,18 @@
 package xyz.xindoo.re.common;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class State {
     protected static int idCnt = 0;
     protected int id;
-    protected int stateType;
+    protected StateType stateType;
 
     public State() {
         this.id = idCnt++;
+        this.stateType = StateType.GENERAL;
     }
 
     public Map<String, Set<State>> next = new HashMap<>();
@@ -27,12 +26,12 @@ public class State {
         set.add(nfaState);
     }
 
-    public void setStateType() {
-        stateType = 1;
+    public void setStateType(StateType stateType) {
+        this.stateType = stateType;
     }
 
     public boolean isEndState() {
-        return stateType == 1;
+        return stateType == StateType.END;
     }
 
     public int getId() {
